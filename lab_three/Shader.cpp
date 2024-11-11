@@ -42,6 +42,16 @@ void Shader::setUniform(const std::string& name, float value) const
 		std::cerr << "location not found" << std::endl;
 	}
 }
+void Shader::setUniform(const std::string& name, int value) const
+{
+	GLint location = glGetUniformLocation(shaderProgramID, name.c_str());
+	if (location != -1) {
+		glUniform1i(location, value);
+	}
+	else {
+		std::cerr << "location not found" << std::endl;
+	}
+}
 void Shader::setUniform(const std::string& name, const glm::vec4& value) const
 {
 	GLint location = glGetUniformLocation(shaderProgramID, name.c_str());

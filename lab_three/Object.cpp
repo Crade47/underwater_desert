@@ -4,7 +4,8 @@ Object::Object(
     const std::vector<glm::vec3>& vertices,
     const std::vector<glm::vec4>& colors,
     const std::vector<GLuint>& indices,
-    const std::string& texFilePath,
+    const std::string& texFilePath_one,
+    const std::string& texFilePath_two,
     const std::vector<glm::vec2>& texCoor
 )
 :indices_arr(indices)
@@ -50,11 +51,13 @@ Object::Object(
     //Fill EBO
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_arr_size, indices.data(), GL_STATIC_DRAW);
 
+
+    //TEXTURE 1
     int width, height, channels;
-    stbi_uc* tex_data = stbi_load(texFilePath.c_str(), &width, &height, &channels, 0);
+    stbi_uc* tex_data = stbi_load(texFilePath_one.c_str(), &width, &height, &channels, 0);
     if (tex_data) {
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glGenTextures(1, &texture_one);
+        glBindTexture(GL_TEXTURE_2D, texture_one);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -62,21 +65,43 @@ Object::Object(
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data);
         glGenerateMipmap(GL_TEXTURE_2D);
-        stbi_image_free(tex_data);
+        
     }
     else {
         std::cerr << "Error loading texture" << std::endl;
         exit(1);
     }
- 
+    
+    //TEXTURE 2
+    tex_data = stbi_load(texFilePath_two.c_str(), &width, &height, &channels, 0);
+    if (tex_data) {
+        glGenTextures(1, &texture_two);
+        glBindTexture(GL_TEXTURE_2D, texture_two);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        
+    }
+    else {
+        std::cerr << "Error loading texture" << std::endl;
+        exit(1);
+    }
+    stbi_image_free(tex_data);
 
     glBindVertexArray(0);
 }
 
 void Object::draw() const
 {
-    glBindTexture(GL_TEXTURE_2D, texture);
+    //glBindTexture(GL_TEXTURE_2D, texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_one);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture_two);
 	glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices_arr.size(), GL_UNSIGNED_INT, 0);
 }

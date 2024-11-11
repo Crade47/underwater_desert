@@ -150,6 +150,8 @@ void display() {
 
 		// Pass uniforms to shader
 		shader->setUniform("model", model);
+		shader->setUniform("texture_one", 0);
+		shader->setUniform("texture_two", 1);
 		//shader->setUniform("color", glm::vec4(0.0f, greenValue, 0.3f, 1.0f));
 
 		obj->draw();
@@ -229,7 +231,14 @@ void init() {
 			glm::vec2(0.0f, 1.0f)
 		};
 
-		obj = new Object(vertices, colors, indices, "../textures/container.jpg", texCoords);
+		obj = new Object(
+			vertices, 
+			colors, 
+			indices, 
+			"../textures/container.jpg", 
+			"../textures/betterface.png",
+			texCoords
+		);
 
 	}
 
@@ -248,9 +257,9 @@ int main(int argc, char** argv) {
 	// Set up the window
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(800, 600);
-	//glutInitWindowSize(1920, 1080);
-	glutCreateWindow("Hello Triangle");
+	/*glutInitWindowSize(800, 600);*/
+	glutInitWindowSize(1280, 720);
+	glutCreateWindow("PEEEEEEETAHHHHH");
 
 
 	

@@ -10,13 +10,14 @@
 class Object
 {
 public:
-	GLuint VAO, EBO, texture;
+	GLuint VAO, EBO, texture_one, texture_two;
 	GLuint VBO[3];
 	Object(
 		const std::vector<glm::vec3>& vertices, 
 		const std::vector<glm::vec4>& colors, 
 		const std::vector<GLuint>& indices,
-		const std::string& texFilePath,
+		const std::string& texFilePath_one,
+		const std::string& texFilePath_two,
 		const std::vector<glm::vec2>&texCoor
 	);
 	void draw() const;
