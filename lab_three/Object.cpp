@@ -12,6 +12,7 @@ Object::Object(
     GLsizeiptr vertex_arr_size = vertices.size() * sizeof(glm::vec3);
     GLsizeiptr color_arr_size = colors.size() * sizeof(glm::vec4);
     GLsizeiptr index_arr_size = indices.size() * sizeof(GLuint);
+    GLsizeiptr texCoor_size = texCoor.size() * sizeof(glm::vec2);
 
     // Generate and bind VAO
     glGenVertexArrays(1, &VAO);
@@ -19,7 +20,7 @@ Object::Object(
 
     // Generate and bind VBO
     //VERTEX
-    glGenBuffers(2, VBO);
+    glGenBuffers(3, VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, vertex_arr_size, vertices.data(), GL_STATIC_DRAW);
     // Position attribute - 3 components (x, y, z)
@@ -35,12 +36,12 @@ Object::Object(
     glEnableVertexAttribArray(1);
 
     //TEXTURES
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-    glBufferData(GL_ARRAY_BUFFER, color_arr_size, colors.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, texCoor_size, texCoor.data(), GL_STATIC_DRAW);
     // Color attribute - 4 components (r, g, b, a)
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+    glEnableVertexAttribArray(2);
 
 
     //Generate and bind EBO
