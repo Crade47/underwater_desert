@@ -17,6 +17,7 @@
 #include <chrono>
 #include <cmath>
 #include "stb_image.h"
+#include "Camera.h"
 #pragma endregion INCLUDES
 
 #pragma region DEFINES
@@ -28,6 +29,10 @@ constexpr auto SCRN_H = 1080;
 #pragma region GLOBAL_VARS
 Object* obj;
 Shader* shader;
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+int lastX = SCRN_W / 2, lastY = SCRN_H / 2;
 
 glm::vec3 cubePositions[] = {
 glm::vec3(0.0f,  0.0f,  0.0f),
@@ -41,6 +46,7 @@ glm::vec3(1.5f,  2.0f, -2.5f),
 glm::vec3(1.5f,  0.2f, -1.5f),
 glm::vec3(-1.3f,  1.0f, -1.5f)
 };
+
 #pragma endregion GLOBAL_VARS
 
 #pragma region INPUT_G_VARIABLES
@@ -49,8 +55,7 @@ glm::vec3 translation(0.0f);
 float scale = 1.0f;
 
 // Mouse tracking variables
-int lastX = 400, lastY = 300;
-bool firstMouse = true;
+
 bool leftMousePressed = false;
 
 #pragma endregion INPUT_G_VARIABLES
@@ -61,11 +66,10 @@ bool leftMousePressed = false;
 void keyboard(unsigned char key, int x, int y) {
 	const float moveSpeed = 0.1f;
 
-
-	if (key == 'w') translation.y += moveSpeed;
-	if (key == 's') translation.y -= moveSpeed;
-	if (key == 'a') translation.x -= moveSpeed;
-	if (key == 'd') translation.x += moveSpeed;
+	if (key == 'w') camera.ProcessKeyboard(FORWARD, deltaTime);
+	if (key == 's') camera.ProcessKeyboard(BACKWARD, deltaTime);
+	if (key == 'a') camera.ProcessKeyboard(LEFT, deltaTime);
+	if (key == 'd') camera.ProcessKeyboard(RIGHT, deltaTime);
 
 	if (key == 'q') rotation += 5.0f;
 	if (key == 'e') rotation -= 5.0f;
@@ -92,21 +96,22 @@ void mouse(int button, int state, int x, int y) {
 }
 
 void mouseMotion(int x, int y) {
-	if (leftMousePressed) {
-		float xoffset = x - lastX;
-		float yoffset = lastY - y;
+	static bool firstMouse = true;
+
+	if (firstMouse) {
 		lastX = x;
 		lastY = y;
-
-		const float sensitivity = 0.1f;
-		xoffset *= sensitivity;
-		yoffset *= sensitivity;
-
-		rotation += xoffset;
-		translation.y += yoffset * 0.01f;
-
-		glutPostRedisplay();
+		firstMouse = false;
 	}
+
+	float xOffset = x - lastX;
+	float yOffset = lastY - y;
+	lastX = x;
+	lastY = y;
+
+	camera.ProcessMouseMovement(xOffset, yOffset);
+	glutPostRedisplay();
+	
 }
 #pragma endregion INPUT_CONTROLS;
 
@@ -166,6 +171,9 @@ void display() {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	float currentFrame = getCurrentTime();
+	deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
 
 
 	if (obj != nullptr && shader != nullptr) {
@@ -174,14 +182,12 @@ void display() {
 		// Create transformation matrices
 
 		
-		glm::mat4 view = glm::mat4(1.0f);
-
-		//Defining view
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		//glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 view = camera.GetViewMatrix();
 
 		//Defining Perspective Projection 
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(75.0f), static_cast<float>(SCRN_W) / static_cast<float>(SCRN_H), 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(45.0f), static_cast<float>(SCRN_W) / static_cast<float>(SCRN_H), 0.1f, 100.0f);
 
 		//Keyboard controlled movements
 
