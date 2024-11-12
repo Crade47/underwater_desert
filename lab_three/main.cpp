@@ -19,10 +19,29 @@
 #include "stb_image.h"
 #pragma endregion INCLUDES
 
-
+#pragma region DEFINES
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
+constexpr auto SCRN_W = 1980;
+constexpr auto SCRN_H = 1080;
+#pragma endregion DEFINES
+
+#pragma region GLOBAL_VARS
 Object* obj;
 Shader* shader;
+
+glm::vec3 cubePositions[] = {
+glm::vec3(0.0f,  0.0f,  0.0f),
+glm::vec3(2.0f,  5.0f, -15.0f),
+glm::vec3(-1.5f, -2.2f, -2.5f),
+glm::vec3(-3.8f, -2.0f, -12.3f),
+glm::vec3(2.4f, -0.4f, -3.5f),
+glm::vec3(-1.7f,  3.0f, -7.5f),
+glm::vec3(1.3f, -2.0f, -2.5f),
+glm::vec3(1.5f,  2.0f, -2.5f),
+glm::vec3(1.5f,  0.2f, -1.5f),
+glm::vec3(-1.3f,  1.0f, -1.5f)
+};
+#pragma endregion GLOBAL_VARS
 
 #pragma region INPUT_G_VARIABLES
 float rotation = 0.0f;
@@ -41,16 +60,20 @@ bool leftMousePressed = false;
 
 void keyboard(unsigned char key, int x, int y) {
 	const float moveSpeed = 0.1f;
-	switch (key) {
-	case 'w': translation.y += moveSpeed; break;
-	case 's': translation.y -= moveSpeed; break;
-	case 'a': translation.x -= moveSpeed; break;
-	case 'd': translation.x += moveSpeed; break;
-	case 'q': rotation += 5.0f; break;
-	case 'e': rotation -= 5.0f; break;
-	case '+': scale *= 1.1f; break;
-	case '-': scale /= 1.1f; break;
-	case 27:  // ESC key
+
+
+	if (key == 'w') translation.y += moveSpeed;
+	if (key == 's') translation.y -= moveSpeed;
+	if (key == 'a') translation.x -= moveSpeed;
+	if (key == 'd') translation.x += moveSpeed;
+
+	if (key == 'q') rotation += 5.0f;
+	if (key == 'e') rotation -= 5.0f;
+
+	if (key == '+') scale += 1.1f;
+	if (key == '-') scale -= 1.1f;
+
+	if (key == 27) {
 		delete obj;
 		delete shader;
 		exit(0);
@@ -90,6 +113,12 @@ void mouseMotion(int x, int y) {
 
 #pragma region OGL_HELPER_FUNCTIONS
 
+float getCurrentTime() {
+	static auto start = std::chrono::high_resolution_clock::now();
+	auto now = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<float> elapsed = now - start;
+	return elapsed.count();
+}
 
 std::vector<glm::vec4> generateRainbowColors(int numColors) {
 	std::vector<glm::vec4> colors(numColors);
@@ -138,23 +167,47 @@ void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
+
 	if (obj != nullptr && shader != nullptr) {
 		shader->use();
 
 		// Create transformation matrices
 
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, translation);
-		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-		model = glm::scale(model, glm::vec3(scale));
+		
+		glm::mat4 view = glm::mat4(1.0f);
+
+		//Defining view
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+		//Defining Perspective Projection 
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(75.0f), static_cast<float>(SCRN_W) / static_cast<float>(SCRN_H), 0.1f, 100.0f);
+
+		//Keyboard controlled movements
+
 
 		// Pass uniforms to shader
-		shader->setUniform("model", model);
 		shader->setUniform("texture_one", 0);
 		shader->setUniform("texture_two", 1);
+
+		shader->setUniform("view", view);
+		shader->setUniform("projection", projection);
+		
 		//shader->setUniform("color", glm::vec4(0.0f, greenValue, 0.3f, 1.0f));
 
-		obj->draw();
+		for (unsigned int i = 0; i < 10; i++) {
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			float angle = 20.0f * i + rotation;
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			model = glm::translate(model, translation);
+			model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 1.0f));
+
+			model = glm::scale(model, glm::vec3(scale));
+			shader->setUniform("model", model);
+			obj->draw();
+		}
+		
 	}
 
 	glutSwapBuffers();
@@ -169,66 +222,93 @@ void init() {
 
 		std::vector<glm::vec3> vertices = {
 			// Front face
-			//glm::vec3(-0.5f, -0.5f,  0.5f),
-			//glm::vec3(0.5f, -0.5f,  0.5f),
-			//glm::vec3(0.5f,  0.5f,  0.5f),
-			//glm::vec3(-0.5f, -0.5f,  0.5f),
-			//glm::vec3(0.5f,  0.5f,  0.5f),
-			//glm::vec3(-0.5f,  0.5f,  0.5f),
-			//// Back face
-			//glm::vec3(-0.5f, -0.5f, -0.5f),
-			//glm::vec3(-0.5f,  0.5f, -0.5f),
-			//glm::vec3(0.5f,  0.5f, -0.5f),
-			//glm::vec3(-0.5f, -0.5f, -0.5f),
-			//glm::vec3(0.5f,  0.5f, -0.5f),
-			//glm::vec3(0.5f, -0.5f, -0.5f),
-			// Add more faces as needed...
-			glm::vec3(0.5f,  0.5f, 0.0f),  // top right
-			glm::vec3(0.5f, -0.5f, 0.0f),  // bottom right
-			glm::vec3(-0.5f, -0.5f, 0.0f),  // bottom left
-			glm::vec3(-0.5f,  0.5f, 0.0f)
+			glm::vec3(-0.5f, -0.5f,  0.5f),  // 0
+			glm::vec3(0.5f, -0.5f,  0.5f),  // 1
+			glm::vec3(0.5f,  0.5f,  0.5f),  // 2
+			glm::vec3(-0.5f,  0.5f,  0.5f),  // 3
+
+			// Back face
+			glm::vec3(-0.5f, -0.5f, -0.5f),  // 4
+			glm::vec3(0.5f, -0.5f, -0.5f),  // 5
+			glm::vec3(0.5f,  0.5f, -0.5f),  // 6
+			glm::vec3(-0.5f,  0.5f, -0.5f),  // 7
+
+			// Top face
+			glm::vec3(-0.5f,  0.5f, -0.5f),  // 8
+			glm::vec3(0.5f,  0.5f, -0.5f),  // 9
+			glm::vec3(0.5f,  0.5f,  0.5f),  // 10
+			glm::vec3(-0.5f,  0.5f,  0.5f),  // 11
+
+			// Bottom face
+			glm::vec3(-0.5f, -0.5f, -0.5f),  // 12
+			glm::vec3(0.5f, -0.5f, -0.5f),  // 13
+			glm::vec3(0.5f, -0.5f,  0.5f),  // 14
+			glm::vec3(-0.5f, -0.5f,  0.5f),  // 15
+
+			// Right face
+			glm::vec3(0.5f, -0.5f, -0.5f),  // 16
+			glm::vec3(0.5f,  0.5f, -0.5f),  // 17
+			glm::vec3(0.5f,  0.5f,  0.5f),  // 18
+			glm::vec3(0.5f, -0.5f,  0.5f),  // 19
+
+			// Left face
+			glm::vec3(-0.5f, -0.5f, -0.5f),  // 20
+			glm::vec3(-0.5f,  0.5f, -0.5f),  // 21
+			glm::vec3(-0.5f,  0.5f,  0.5f),  // 22
+			glm::vec3(-0.5f, -0.5f,  0.5f)   // 23
 		};
+
 		std::vector<glm::vec4> colors = generateRainbowColors(vertices.size());
-		//std::vector<glm::vec4> colors(vertices.size(), glm::vec4(0.2f, 0.3f, 0.2f, 0.5f));
 		std::vector<GLuint> indices = {
-			//0, 1, 2, 2, 3, 0,    // Front face
-			//0, 4, 7, 0, 7, 1,    // Left face
-			//1, 7, 6, 1, 6, 2,    // Bottom face
-			//2, 6, 5, 2, 5, 3,    // Right face
-			//3, 5, 4, 3, 4, 0,    // Top face
-			//4, 5, 6, 4, 6, 7     // Back face
-			0, 1, 2,   // First triangle
-			0, 2, 3
+			// Front face
+			0,  1,  2,     0,  2,  3,
+			// Back face
+			4,  5,  6,     4,  6,  7,
+			// Top face
+			8,  9,  10,    8,  10, 11,
+			// Bottom face
+			12, 13, 14,    12, 14, 15,
+			// Right face
+			16, 17, 18,    16, 18, 19,
+			// Left face
+			20, 21, 22,    20, 22, 23
 		};
-
 		std::vector<glm::vec2> texCoords = {
-			// Front face (6 vertices, 2 triangles)
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f),
+			// Front face
+			glm::vec2(0.0f, 0.0f),  // 0
+			glm::vec2(1.0f, 0.0f),  // 1
+			glm::vec2(1.0f, 1.0f),  // 2
+			glm::vec2(0.0f, 1.0f),  // 3
 
-			//// Back face (6 vertices, 2 triangles)
-			//glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 1.0f),
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 0.0f),
+			// Back face
+			glm::vec2(1.0f, 0.0f),  // 4
+			glm::vec2(0.0f, 0.0f),  // 5
+			glm::vec2(0.0f, 1.0f),  // 6
+			glm::vec2(1.0f, 1.0f),  // 7
 
-			//// Left face
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f),
+			// Top face
+			glm::vec2(0.0f, 0.0f),  // 8
+			glm::vec2(1.0f, 0.0f),  // 9
+			glm::vec2(1.0f, 1.0f),  // 10
+			glm::vec2(0.0f, 1.0f),  // 11
 
-			//// Bottom face
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f),
+			// Bottom face
+			glm::vec2(0.0f, 0.0f),  // 12
+			glm::vec2(1.0f, 0.0f),  // 13
+			glm::vec2(1.0f, 1.0f),  // 14
+			glm::vec2(0.0f, 1.0f),  // 15
 
-			//// Right face
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f),
+			// Right face
+			glm::vec2(0.0f, 0.0f),  // 16
+			glm::vec2(1.0f, 0.0f),  // 17
+			glm::vec2(1.0f, 1.0f),  // 18
+			glm::vec2(0.0f, 1.0f),  // 19
 
-			//// Top face
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-			//glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)
-			glm::vec2(1.0f, 1.0f),  // top right
-			glm::vec2(1.0f, 0.0f),  // bottom right
-			glm::vec2(0.0f, 0.0f),  // bottom left
-			glm::vec2(0.0f, 1.0f)
+			// Left face
+			glm::vec2(0.0f, 0.0f),  // 20
+			glm::vec2(1.0f, 0.0f),  // 21
+			glm::vec2(1.0f, 1.0f),  // 22
+			glm::vec2(0.0f, 1.0f)   // 23
 		};
 
 		obj = new Object(
@@ -258,7 +338,7 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	/*glutInitWindowSize(800, 600);*/
-	glutInitWindowSize(1280, 720);
+	glutInitWindowSize(SCRN_W, SCRN_H);
 	glutCreateWindow("PEEEEEEETAHHHHH");
 
 
@@ -273,9 +353,9 @@ int main(int argc, char** argv) {
 
 	
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CW);
-	glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	//glFrontFace(GL_CW);
+	//glCullFace(GL_BACK);
 
 	init();
 
