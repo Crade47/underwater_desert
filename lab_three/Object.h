@@ -7,6 +7,7 @@
 #include <vector>
 #include "stb_image.h"
 #include "iostream"
+#include <random>
 class Object
 {
 public:
@@ -20,6 +21,10 @@ public:
 		const std::string& texFilePath_two,
 		const std::vector<glm::vec2>&texCoor
 	);
+	static std::vector<glm::vec3> generateTerrain(int gridSize, float size);
+	static std::vector<GLuint> generateTerrainIndices(int gridSize);
+	static std::vector<glm::vec2> generateTerrainTexCoords(int gridSize);
+
 	void draw() const;
 	~Object();
 private:

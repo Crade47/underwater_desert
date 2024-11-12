@@ -95,6 +95,59 @@ Object::Object(
     glBindVertexArray(0);
 }
 
+std::vector<glm::vec3> Object::generateTerrain(int gridSize, float size)
+{
+    std::vector<glm::vec3> vertices;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> distr(-0.2f, 0.2f);
+
+    for (int z = 0; z < gridSize; z++) {
+        for (int x = 0; x < gridSize; x++) {
+            float xPos = (x - gridSize / 2.0f) * (size / gridSize);
+            float zPos = (z - gridSize / 2.0f) * (size / gridSize);
+            float yPos = distr(gen); // Random height for dunes
+            vertices.push_back(glm::vec3(xPos, yPos, zPos));
+        }
+    }
+    return vertices;
+}
+
+std::vector<GLuint> Object::generateTerrainIndices(int gridSize)
+{
+    std::vector<GLuint> indices;
+    for (int z = 0; z < gridSize - 1; z++) {
+        for (int x = 0; x < gridSize - 1; x++) {
+            GLuint topLeft = z * gridSize + x;
+            GLuint topRight = topLeft + 1;
+            GLuint bottomLeft = (z + 1) * gridSize + x;
+            GLuint bottomRight = bottomLeft + 1;
+
+            indices.push_back(topLeft);
+            indices.push_back(bottomLeft);
+            indices.push_back(topRight);
+
+            indices.push_back(topRight);
+            indices.push_back(bottomLeft);
+            indices.push_back(bottomRight);
+        }
+    }
+    return indices;
+}
+
+std::vector<glm::vec2> Object::generateTerrainTexCoords(int gridSize)
+{
+    std::vector<glm::vec2> texCoords;
+    for (int z = 0; z < gridSize; z++) {
+        for (int x = 0; x < gridSize; x++) {
+            float u = static_cast<float>(x) / (gridSize - 1);
+            float v = static_cast<float>(z) / (gridSize - 1);
+            texCoords.push_back(glm::vec2(u, v));
+        }
+    }
+    return texCoords;
+}
+
 void Object::draw() const
 {
     //glBindTexture(GL_TEXTURE_2D, texture);

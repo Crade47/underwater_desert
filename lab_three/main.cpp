@@ -29,7 +29,7 @@ constexpr auto SCRN_H = 1080;
 #pragma region GLOBAL_VARS
 Object* obj;
 Shader* shader;
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 int lastX = SCRN_W / 2, lastY = SCRN_H / 2;
@@ -125,50 +125,10 @@ float getCurrentTime() {
 	return elapsed.count();
 }
 
-std::vector<glm::vec4> generateRainbowColors(int numColors) {
-	std::vector<glm::vec4> colors(numColors);
-	float hueStep = 360.0f / static_cast<float>(numColors);
-
-	for (int i = 0; i < numColors; i++) {
-		float hue = static_cast<float>(i) * hueStep;
-		float saturation = 1.0f;
-		float value = 1.0f;
-
-		// Convert HSV to RGB
-		float c = value * saturation;
-		float x = c * (1 - std::abs(std::fmod(hue / 60.0f, 2) - 1));
-		float m = value - c;
-		float r, g, b;
-
-		if (hue >= 0 && hue < 60) {
-			r = c, g = x, b = 0;
-		}
-		else if (hue >= 60 && hue < 120) {
-			r = x, g = c, b = 0;
-		}
-		else if (hue >= 120 && hue < 180) {
-			r = 0, g = c, b = x;
-		}
-		else if (hue >= 180 && hue < 240) {
-			r = 0, g = x, b = c;
-		}
-		else if (hue >= 240 && hue < 300) {
-			r = x, g = 0, b = c;
-		}
-		else {
-			r = c, g = 0, b = x;
-		}
-
-		colors[i] = glm::vec4(r + m, g + m, b + m, 1.0f);
-	}
-
-	return colors;
-}
-
 
 void display() {
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.2f, 0.4f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	float currentFrame = getCurrentTime();
@@ -187,7 +147,7 @@ void display() {
 
 		//Defining Perspective Projection 
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(45.0f), static_cast<float>(SCRN_W) / static_cast<float>(SCRN_H), 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(75.0f), static_cast<float>(SCRN_W) / static_cast<float>(SCRN_H), 0.1f, 100.0f);
 
 		//Keyboard controlled movements
 
@@ -224,106 +184,25 @@ void init() {
 	try {
 		shader = new Shader("../lab_three/vertex_shader.glsl", "../lab_three/fragment_shader.glsl");
 		shader->use();
+		int gridSize = 50; // Size of the terrain grid
+		float terrainSize = 20.0f; // Physical size of terrain
 
+		std::vector<glm::vec3> terrainVertices = Object::generateTerrain(gridSize, terrainSize);
+		std::vector<GLuint> terrainIndices = Object::generateTerrainIndices(gridSize);
+		std::vector<glm::vec2> terrainTexCoords = Object::generateTerrainTexCoords(gridSize);
 
-		std::vector<glm::vec3> vertices = {
-			// Front face
-			glm::vec3(-0.5f, -0.5f,  0.5f),  // 0
-			glm::vec3(0.5f, -0.5f,  0.5f),  // 1
-			glm::vec3(0.5f,  0.5f,  0.5f),  // 2
-			glm::vec3(-0.5f,  0.5f,  0.5f),  // 3
-
-			// Back face
-			glm::vec3(-0.5f, -0.5f, -0.5f),  // 4
-			glm::vec3(0.5f, -0.5f, -0.5f),  // 5
-			glm::vec3(0.5f,  0.5f, -0.5f),  // 6
-			glm::vec3(-0.5f,  0.5f, -0.5f),  // 7
-
-			// Top face
-			glm::vec3(-0.5f,  0.5f, -0.5f),  // 8
-			glm::vec3(0.5f,  0.5f, -0.5f),  // 9
-			glm::vec3(0.5f,  0.5f,  0.5f),  // 10
-			glm::vec3(-0.5f,  0.5f,  0.5f),  // 11
-
-			// Bottom face
-			glm::vec3(-0.5f, -0.5f, -0.5f),  // 12
-			glm::vec3(0.5f, -0.5f, -0.5f),  // 13
-			glm::vec3(0.5f, -0.5f,  0.5f),  // 14
-			glm::vec3(-0.5f, -0.5f,  0.5f),  // 15
-
-			// Right face
-			glm::vec3(0.5f, -0.5f, -0.5f),  // 16
-			glm::vec3(0.5f,  0.5f, -0.5f),  // 17
-			glm::vec3(0.5f,  0.5f,  0.5f),  // 18
-			glm::vec3(0.5f, -0.5f,  0.5f),  // 19
-
-			// Left face
-			glm::vec3(-0.5f, -0.5f, -0.5f),  // 20
-			glm::vec3(-0.5f,  0.5f, -0.5f),  // 21
-			glm::vec3(-0.5f,  0.5f,  0.5f),  // 22
-			glm::vec3(-0.5f, -0.5f,  0.5f)   // 23
-		};
-
-		std::vector<glm::vec4> colors = generateRainbowColors(vertices.size());
-		std::vector<GLuint> indices = {
-			// Front face
-			0,  1,  2,     0,  2,  3,
-			// Back face
-			4,  5,  6,     4,  6,  7,
-			// Top face
-			8,  9,  10,    8,  10, 11,
-			// Bottom face
-			12, 13, 14,    12, 14, 15,
-			// Right face
-			16, 17, 18,    16, 18, 19,
-			// Left face
-			20, 21, 22,    20, 22, 23
-		};
-		std::vector<glm::vec2> texCoords = {
-			// Front face
-			glm::vec2(0.0f, 0.0f),  // 0
-			glm::vec2(1.0f, 0.0f),  // 1
-			glm::vec2(1.0f, 1.0f),  // 2
-			glm::vec2(0.0f, 1.0f),  // 3
-
-			// Back face
-			glm::vec2(1.0f, 0.0f),  // 4
-			glm::vec2(0.0f, 0.0f),  // 5
-			glm::vec2(0.0f, 1.0f),  // 6
-			glm::vec2(1.0f, 1.0f),  // 7
-
-			// Top face
-			glm::vec2(0.0f, 0.0f),  // 8
-			glm::vec2(1.0f, 0.0f),  // 9
-			glm::vec2(1.0f, 1.0f),  // 10
-			glm::vec2(0.0f, 1.0f),  // 11
-
-			// Bottom face
-			glm::vec2(0.0f, 0.0f),  // 12
-			glm::vec2(1.0f, 0.0f),  // 13
-			glm::vec2(1.0f, 1.0f),  // 14
-			glm::vec2(0.0f, 1.0f),  // 15
-
-			// Right face
-			glm::vec2(0.0f, 0.0f),  // 16
-			glm::vec2(1.0f, 0.0f),  // 17
-			glm::vec2(1.0f, 1.0f),  // 18
-			glm::vec2(0.0f, 1.0f),  // 19
-
-			// Left face
-			glm::vec2(0.0f, 0.0f),  // 20
-			glm::vec2(1.0f, 0.0f),  // 21
-			glm::vec2(1.0f, 1.0f),  // 22
-			glm::vec2(0.0f, 1.0f)   // 23
-		};
-
+		// Generate colors for terrain (sandy colors)
+		std::vector<glm::vec4> terrainColors;
+		for (size_t i = 0; i < terrainVertices.size(); i++) {
+			terrainColors.push_back(glm::vec4(0.76f, 0.70f, 0.50f, 1.0f)); // Sandy color
+		}
 		obj = new Object(
-			vertices, 
-			colors, 
-			indices, 
-			"../textures/container.jpg", 
-			"../textures/betterface.png",
-			texCoords
+			terrainVertices,
+			terrainColors,
+			terrainIndices,
+			"../textures/sand.jpg", 
+			"../textures/sand_detailed.png",
+			terrainTexCoords
 		);
 
 	}
@@ -359,9 +238,7 @@ int main(int argc, char** argv) {
 
 	
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
-	//glFrontFace(GL_CW);
-	//glCullFace(GL_BACK);
+
 
 	init();
 
