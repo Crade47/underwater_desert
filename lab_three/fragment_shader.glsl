@@ -4,11 +4,17 @@
 in vec4 vertexColor;
 in vec2 TexCoor;
 
-uniform sampler2D texture_one;
-uniform sampler2D texture_two;
+struct Material {
+    sampler2D texture_diffuse1;
+    sampler2D texture_diffuse2;
+
+};
+
+uniform Material material;
+
 
 out vec4 FragColor;
 
 void main() {
-    FragColor = mix(texture(texture_one, TexCoor), texture(texture_two, TexCoor), 0.1);
+    FragColor = mix(texture(material.texture_diffuse1, TexCoor), texture(material.texture_diffuse2, TexCoor), 0.1);
 }

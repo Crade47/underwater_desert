@@ -39,7 +39,7 @@ void Shader::setUniform(const std::string& name, float value) const
 		glUniform1f(location, value);
 	}
 	else {
-		std::cerr << "location not found" << std::endl;
+		std::cerr << "location not found for" << name << std::endl;
 	}
 }
 void Shader::setUniform(const std::string& name, int value) const
@@ -49,7 +49,7 @@ void Shader::setUniform(const std::string& name, int value) const
 		glUniform1i(location, value);
 	}
 	else {
-		std::cerr << "location not found" << std::endl;
+		std::cerr << "location not found for" << name << std::endl;
 	}
 }
 void Shader::setUniform(const std::string& name, const glm::vec4& value) const
@@ -59,7 +59,17 @@ void Shader::setUniform(const std::string& name, const glm::vec4& value) const
 		glUniform4fv(location, 1, &value[0]);
 	}
 	else {
-		std::cerr << "location not found" << std::endl;
+		std::cerr << "location not found for" << name << std::endl;
+	}
+}
+void Shader::setUniform(const std::string& name, const glm::vec3& value) const
+{
+	GLint location = glGetUniformLocation(shaderProgramID, name.c_str());
+	if (location != -1) {
+		glUniform4fv(location, 1, &value[0]);
+	}
+	else {
+		std::cerr << "location not found for" << name << std::endl;
 	}
 }
 
@@ -70,7 +80,7 @@ void Shader::setUniform(const std::string& name, const glm::mat4& matrix) const
 		glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]);
 	}
 	else {
-		std::cerr << "location not found" << std::endl;
+		std::cerr << "location not found for" << name << std::endl;
 	}
 }
 

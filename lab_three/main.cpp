@@ -18,6 +18,9 @@
 #include <cmath>
 #include "stb_image.h"
 #include "Camera.h"
+#include "Model.h"
+#include "Mesh.h"
+
 #pragma endregion INCLUDES
 
 #pragma region DEFINES
@@ -34,18 +37,9 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 int lastX = SCRN_W / 2, lastY = SCRN_H / 2;
 
-glm::vec3 cubePositions[] = {
-glm::vec3(0.0f,  0.0f,  0.0f),
-glm::vec3(2.0f,  5.0f, -15.0f),
-glm::vec3(-1.5f, -2.2f, -2.5f),
-glm::vec3(-3.8f, -2.0f, -12.3f),
-glm::vec3(2.4f, -0.4f, -3.5f),
-glm::vec3(-1.7f,  3.0f, -7.5f),
-glm::vec3(1.3f, -2.0f, -2.5f),
-glm::vec3(1.5f,  2.0f, -2.5f),
-glm::vec3(1.5f,  0.2f, -1.5f),
-glm::vec3(-1.3f,  1.0f, -1.5f)
-};
+
+Model* stingrayModel = nullptr;
+float stingrayRotation = 0.0f;
 
 #pragma endregion GLOBAL_VARS
 
@@ -152,26 +146,58 @@ void display() {
 		//Keyboard controlled movements
 
 
+
 		// Pass uniforms to shader
-		shader->setUniform("texture_one", 0);
-		shader->setUniform("texture_two", 1);
+		//shader->setUniform("texture_one", 0);
+		//shader->setUniform("texture_two", 1);
+
+
 
 		shader->setUniform("view", view);
 		shader->setUniform("projection", projection);
 		
 		//shader->setUniform("color", glm::vec4(0.0f, greenValue, 0.3f, 1.0f));
+		glm::mat4 model = glm::mat4(1.0f);
+		/*model = glm::translate(model, cubePositions[i]);*/
+		float angle = 20.0f + rotation;
+		model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+		model = glm::translate(model, translation);
+		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 1.0f));
 
-		for (unsigned int i = 0; i < 10; i++) {
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			float angle = 20.0f * i + rotation;
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			model = glm::translate(model, translation);
-			model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 1.0f));
+		//model = glm::scale(model, glm::vec3(scale));
+		//shader->setUniform("model", model);
+		//obj->draw();
 
-			model = glm::scale(model, glm::vec3(scale));
-			shader->setUniform("model", model);
+
+
+
+		if (obj != nullptr) {
+			glm::mat4 terrainModel = glm::mat4(1.0f);
+			terrainModel = glm::translate(terrainModel, glm::vec3(0.0f, -5.0f, 0.0f));
+			shader->setUniform("model", terrainModel);
 			obj->draw();
+		}
+
+
+
+		if (stingrayModel != nullptr) {
+			glm::mat4 stingrayModelMatrix = glm::mat4(1.0f);
+
+			// Position the stingray above the terrain
+			stingrayModelMatrix = glm::translate(stingrayModelMatrix,
+				glm::vec3(0.0f, -3.0f, 0.0f));
+
+			// Add some animation
+			stingrayRotation += deltaTime * 20.0f; // Rotate 20 degrees per second
+			stingrayModelMatrix = glm::rotate(stingrayModelMatrix,
+				glm::radians(stingrayRotation), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			// Scale the model if needed
+			stingrayModelMatrix = glm::scale(stingrayModelMatrix,
+				glm::vec3(0.5f)); // Adjust scale as needed
+
+			shader->setUniform("model", stingrayModelMatrix);
+			stingrayModel->Draw(*shader);
 		}
 		
 	}
@@ -204,7 +230,7 @@ void init() {
 			"../textures/sand_detailed.png",
 			terrainTexCoords
 		);
-
+		stingrayModel = new Model("../models/stingray/stingray.obj");
 	}
 
 	catch (const std::exception& e) {
@@ -224,7 +250,7 @@ int main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	/*glutInitWindowSize(800, 600);*/
 	glutInitWindowSize(SCRN_W, SCRN_H);
-	glutCreateWindow("PEEEEEEETAHHHHH");
+	glutCreateWindow("demo");
 
 
 	
