@@ -1,7 +1,9 @@
 #include "Model.h"
 #include <iostream>
+#include <filesystem>
 
 Model::Model(const char* path) {
+    std::cout << "Loading model from path: " << path << std::endl;
     loadModel(path);
 }
 
@@ -69,6 +71,10 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 }
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName) {
+    unsigned int textureCount = mat->GetTextureCount(type);
+    std::cout << "Number of textures for type " << typeName << ": " << textureCount << std::endl;
+
+
     std::vector<Texture> textures;
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
         aiString str;
@@ -96,13 +102,21 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
 unsigned int Model::TextureFromFile(const char* path, const std::string& directory) {
     std::string filename = std::string(path);
     filename = directory + '/' + filename;
-
+    std::cout << filename << std::endl;
     unsigned int textureID;
     glGenTextures(1, &textureID);
+    std::cout << "Attempting to load texture: " << filename << std::endl;
 
     int width, height, nrComponents;
     unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     if (data) {
+
+        std::cout << "Texture loaded successfully:" << std::endl;
+        std::cout << "  Width: " << width << std::endl;
+        std::cout << "  Height: " << height << std::endl;
+        std::cout << "  Components: " << nrComponents << std::endl;
+        std::cout << "  Texture ID: " << textureID << std::endl;
+
         GLenum format;
         if (nrComponents == 1)
             format = GL_RED;
@@ -124,6 +138,9 @@ unsigned int Model::TextureFromFile(const char* path, const std::string& directo
     }
     else {
         std::cout << "Texture failed to load at path: " << path << ", stbi failure reason: " << stbi_failure_reason() << std::endl;
+        std::cerr << "ERROR: Texture failed to load" << std::endl;
+        std::cerr << "Full path: " << filename << std::endl;
+        std::cerr << "STB Failure reason: " << stbi_failure_reason() << std::endl;
         stbi_image_free(data);
     }
 

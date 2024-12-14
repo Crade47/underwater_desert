@@ -21,6 +21,7 @@ public:
 	void setUniform(const std::string& name, const glm::vec3& value) const;
 	void setUniform(const std::string& name, const glm::vec4& value) const;
 	void setUniform(const std::string& name, const glm::mat4& matrix) const;
+	void setUniformTexture(const std::string& name, int textureUnit) const;
 	~Shader();
 	bool isValid() const { return shaderProgramID != 0; }
 private:

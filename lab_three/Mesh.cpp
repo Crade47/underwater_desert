@@ -8,6 +8,8 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>&
 void Mesh::Draw(Shader& shader) {
     unsigned int diffuseNr = 1;
 
+
+
     for (unsigned int i = 0; i < textures.size(); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
         std::string number = std::to_string(diffuseNr++);
@@ -21,6 +23,7 @@ void Mesh::Draw(Shader& shader) {
 
     glActiveTexture(GL_TEXTURE0);
 }
+
 
 void Mesh::setupMesh() {
     glGenVertexArrays(1, &VAO);

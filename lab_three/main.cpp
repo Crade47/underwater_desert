@@ -39,6 +39,8 @@ int lastX = SCRN_W / 2, lastY = SCRN_H / 2;
 
 
 Model* stingrayModel = nullptr;
+Model* coral_pink_model = nullptr;
+Model* coral_gon_model = nullptr;
 float stingrayRotation = 0.0f;
 
 #pragma endregion GLOBAL_VARS
@@ -133,25 +135,17 @@ void display() {
 	if (obj != nullptr && shader != nullptr) {
 		shader->use();
 
+	
+
 		// Create transformation matrices
 
-		
-		//glm::mat4 view = glm::mat4(1.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 
 		//Defining Perspective Projection 
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(75.0f), static_cast<float>(SCRN_W) / static_cast<float>(SCRN_H), 0.1f, 100.0f);
 
-		//Keyboard controlled movements
-
-
-
-		// Pass uniforms to shader
-		//shader->setUniform("texture_one", 0);
-		//shader->setUniform("texture_two", 1);
-
-
+	
 
 		shader->setUniform("view", view);
 		shader->setUniform("projection", projection);
@@ -165,8 +159,7 @@ void display() {
 		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 1.0f));
 
 		//model = glm::scale(model, glm::vec3(scale));
-		//shader->setUniform("model", model);
-		//obj->draw();
+
 
 
 
@@ -179,7 +172,24 @@ void display() {
 		}
 
 
+		if (coral_pink_model != nullptr) {
+			glm::mat4 coral_pink_matrix = glm::mat4(1.0f);
+			coral_pink_matrix = glm::translate(coral_pink_matrix, glm::vec3(4.0f, -4.0f, 0.0f));
 
+			coral_pink_matrix = glm::scale(coral_pink_matrix, glm::vec3(0.3f));
+			shader->setUniform("model", coral_pink_matrix);
+			coral_pink_model->Draw(*shader);
+			
+		}
+		if (coral_gon_model != nullptr) {
+			glm::mat4 coral_gon_matrix = glm::mat4(1.0f);
+			coral_gon_matrix = glm::translate(coral_gon_matrix, glm::vec3(6.0f, -4.5f, 0.0f));
+
+			coral_gon_matrix = glm::scale(coral_gon_matrix, glm::vec3(0.4f));
+			shader->setUniform("model", coral_gon_matrix);
+			coral_gon_model->Draw(*shader);
+
+		}
 		if (stingrayModel != nullptr) {
 			glm::mat4 stingrayModelMatrix = glm::mat4(1.0f);
 
@@ -194,12 +204,13 @@ void display() {
 
 			// Scale the model if needed
 			stingrayModelMatrix = glm::scale(stingrayModelMatrix,
-				glm::vec3(0.5f)); // Adjust scale as needed
+				glm::vec3(0.09f)); // Adjust scale as needed
 
 			shader->setUniform("model", stingrayModelMatrix);
+
 			stingrayModel->Draw(*shader);
 		}
-		
+
 	}
 
 	glutSwapBuffers();
@@ -210,8 +221,8 @@ void init() {
 	try {
 		shader = new Shader("../lab_three/vertex_shader.glsl", "../lab_three/fragment_shader.glsl");
 		shader->use();
-		int gridSize = 50; // Size of the terrain grid
-		float terrainSize = 20.0f; // Physical size of terrain
+		int gridSize = 180; // Size of the terrain grid
+		float terrainSize = 150.0f; // Physical size of terrain
 
 		std::vector<glm::vec3> terrainVertices = Object::generateTerrain(gridSize, terrainSize);
 		std::vector<GLuint> terrainIndices = Object::generateTerrainIndices(gridSize);
@@ -230,7 +241,9 @@ void init() {
 			"../textures/sand_detailed.png",
 			terrainTexCoords
 		);
-		stingrayModel = new Model("../models/stingray/stingray.obj");
+		stingrayModel = new Model("../models/stingray/source/Common_Stingray_02.obj");
+		coral_pink_model = new Model("../models/coral-pink/untitled.obj");
+		coral_gon_model = new Model("../models/coral-gon/coral-gon.obj");
 	}
 
 	catch (const std::exception& e) {

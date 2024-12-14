@@ -84,6 +84,17 @@ void Shader::setUniform(const std::string& name, const glm::mat4& matrix) const
 	}
 }
 
+void Shader::setUniformTexture(const std::string& name, int textureUnit) const
+{
+	GLint location = glGetUniformLocation(shaderProgramID, name.c_str());
+	if (location != -1) {
+		glUniform1i(location, textureUnit);
+	}
+	else {
+		std::cerr << "location not found for " << name << std::endl;
+	}
+}
+
 
 GLuint Shader::compileShader(GLenum type, const char* source)
 {
