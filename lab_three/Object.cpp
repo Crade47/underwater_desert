@@ -81,8 +81,10 @@ Object::Object(
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
+        if (tex_data) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data);
+        }
+       
         glGenerateMipmap(GL_TEXTURE_2D);
         
     }
@@ -147,6 +149,7 @@ std::vector<glm::vec2> Object::generateTerrainTexCoords(int gridSize)
     }
     return texCoords;
 }
+
 
 void Object::draw() const
 {

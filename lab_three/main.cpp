@@ -20,6 +20,8 @@
 #include "Camera.h"
 #include "Model.h"
 #include "Mesh.h"
+#include "SceneGenerator.h"
+#include "Level.h"
 
 #pragma endregion INCLUDES
 
@@ -32,15 +34,16 @@ constexpr auto SCRN_H = 1080;
 #pragma region GLOBAL_VARS
 Object* obj;
 Shader* shader;
-Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
+Camera* camera = new Camera(glm::vec3(-20.0f, 2.0f, 20.0f));
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 int lastX = SCRN_W / 2, lastY = SCRN_H / 2;
 
 
-Model* stingrayModel = nullptr;
-Model* coral_pink_model = nullptr;
-Model* coral_gon_model = nullptr;
+
+Level* underwaterDesert;
+
+
 float stingrayRotation = 0.0f;
 
 #pragma endregion GLOBAL_VARS
@@ -62,10 +65,10 @@ bool leftMousePressed = false;
 void keyboard(unsigned char key, int x, int y) {
 	const float moveSpeed = 0.1f;
 
-	if (key == 'w') camera.ProcessKeyboard(FORWARD, deltaTime);
-	if (key == 's') camera.ProcessKeyboard(BACKWARD, deltaTime);
-	if (key == 'a') camera.ProcessKeyboard(LEFT, deltaTime);
-	if (key == 'd') camera.ProcessKeyboard(RIGHT, deltaTime);
+	if (key == 'w') camera->ProcessKeyboard(FORWARD, deltaTime);
+	if (key == 's') camera->ProcessKeyboard(BACKWARD, deltaTime);
+	if (key == 'a') camera->ProcessKeyboard(LEFT, deltaTime);
+	if (key == 'd') camera->ProcessKeyboard(RIGHT, deltaTime);
 
 	if (key == 'q') rotation += 5.0f;
 	if (key == 'e') rotation -= 5.0f;
@@ -105,7 +108,7 @@ void mouseMotion(int x, int y) {
 	lastX = x;
 	lastY = y;
 
-	camera.ProcessMouseMovement(xOffset, yOffset);
+	camera->ProcessMouseMovement(xOffset, yOffset);
 	glutPostRedisplay();
 	
 }
@@ -135,21 +138,21 @@ void display() {
 	if (obj != nullptr && shader != nullptr) {
 		shader->use();
 
-	
+
 
 		// Create transformation matrices
 
-		glm::mat4 view = camera.GetViewMatrix();
+		glm::mat4 view = camera->GetViewMatrix();
 
 		//Defining Perspective Projection 
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(75.0f), static_cast<float>(SCRN_W) / static_cast<float>(SCRN_H), 0.1f, 100.0f);
 
-	
+
 
 		shader->setUniform("view", view);
 		shader->setUniform("projection", projection);
-		
+
 		//shader->setUniform("color", glm::vec4(0.0f, greenValue, 0.3f, 1.0f));
 		glm::mat4 model = glm::mat4(1.0f);
 		/*model = glm::translate(model, cubePositions[i]);*/
@@ -172,48 +175,9 @@ void display() {
 		}
 
 
-		if (coral_pink_model != nullptr) {
-			glm::mat4 coral_pink_matrix = glm::mat4(1.0f);
-			coral_pink_matrix = glm::translate(coral_pink_matrix, glm::vec3(4.0f, -4.0f, 0.0f));
-
-			coral_pink_matrix = glm::scale(coral_pink_matrix, glm::vec3(0.3f));
-			shader->setUniform("model", coral_pink_matrix);
-			coral_pink_model->Draw(*shader);
-			
-		}
-		if (coral_gon_model != nullptr) {
-			glm::mat4 coral_gon_matrix = glm::mat4(1.0f);
-			coral_gon_matrix = glm::translate(coral_gon_matrix, glm::vec3(6.0f, -4.5f, 0.0f));
-
-			coral_gon_matrix = glm::scale(coral_gon_matrix, glm::vec3(0.4f));
-			shader->setUniform("model", coral_gon_matrix);
-			coral_gon_model->Draw(*shader);
-
-		}
-		if (stingrayModel != nullptr) {
-			glm::mat4 stingrayModelMatrix = glm::mat4(1.0f);
-
-			// Position the stingray above the terrain
-			stingrayModelMatrix = glm::translate(stingrayModelMatrix,
-				glm::vec3(0.0f, -3.0f, 0.0f));
-
-			// Add some animation
-			stingrayRotation += deltaTime * 20.0f; // Rotate 20 degrees per second
-			stingrayModelMatrix = glm::rotate(stingrayModelMatrix,
-				glm::radians(stingrayRotation), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			// Scale the model if needed
-			stingrayModelMatrix = glm::scale(stingrayModelMatrix,
-				glm::vec3(0.09f)); // Adjust scale as needed
-
-			shader->setUniform("model", stingrayModelMatrix);
-
-			stingrayModel->Draw(*shader);
-		}
-
+		underwaterDesert->render();
+		glutSwapBuffers();
 	}
-
-	glutSwapBuffers();
 }
 
 void init() {
@@ -221,8 +185,8 @@ void init() {
 	try {
 		shader = new Shader("../lab_three/vertex_shader.glsl", "../lab_three/fragment_shader.glsl");
 		shader->use();
-		int gridSize = 180; // Size of the terrain grid
-		float terrainSize = 150.0f; // Physical size of terrain
+		int gridSize = 70; // Size of the terrain grid
+		float terrainSize = 40.0f; // Physical size of terrain
 
 		std::vector<glm::vec3> terrainVertices = Object::generateTerrain(gridSize, terrainSize);
 		std::vector<GLuint> terrainIndices = Object::generateTerrainIndices(gridSize);
@@ -241,9 +205,80 @@ void init() {
 			"../textures/sand_detailed.png",
 			terrainTexCoords
 		);
-		stingrayModel = new Model("../models/stingray/source/Common_Stingray_02.obj");
-		coral_pink_model = new Model("../models/coral-pink/untitled.obj");
-		coral_gon_model = new Model("../models/coral-gon/coral-gon.obj");
+
+		Model* stingrayModel = new Model("../models/stingray/source/Common_Stingray_02.obj");
+		Model* coral_pink_model = new Model("../models/coral-pink/untitled.obj");
+		Model* coral_gon_model = new Model("../models/coral-gon/coral-gon.obj");
+		Model* coral_pocil_model = new Model("../models/coral-pocil/coral-pocil.obj");
+		Model* coral_stone_model = new Model("../models/coral-stone/model.obj");
+		Model* life_jellyfish_model = new Model("../models/life-jellyfish/life-jellyfish.obj");
+		Model* life_guppy_model = new Model("../models/life-guppy/life-guppy.obj");
+
+		CoralPosParams coral_params;
+		coral_params.maxY = -4.0f;
+		auto coralPinkPositions = SceneGenerator::generateCoralPositions(13, coral_params);
+		coral_params.maxY = -4.8f;
+		auto coralGonPositions = SceneGenerator::generateCoralPositions(24, coral_params);
+		coral_params.maxY = -4.9f;
+		auto coralPocilPositions = SceneGenerator::generateCoralPositions(17, coral_params);
+		coral_params.maxY = -4.2f;
+		auto coralStonePositions = SceneGenerator::generateCoralPositions(9, coral_params);
+		
+		SceneObject* coralPinkObjects = new SceneObject(
+			coral_pink_model,
+			coralPinkPositions,
+			glm::vec3(0.5f)
+		);
+		SceneObject* coralGonObjects = new SceneObject(
+			coral_gon_model,
+			coralGonPositions,
+			glm::vec3(0.5f)
+		);
+		
+		SceneObject* coralPocilObjects = new SceneObject(
+			coral_pocil_model,
+			coralPocilPositions,
+			glm::vec3(0.15f)
+		);
+		
+		SceneObject* coralStoneObjects = new SceneObject(
+			coral_stone_model,
+			coralStonePositions,
+			glm::vec3(0.09f)
+		);
+
+
+		glm::vec3 fishSchoolCenter(6.0f, -1.0f, 10.0f);  // Adjust as needed
+		FishSchoolParams school_params;
+		school_params.numFish = 20;
+		school_params.spread = 10;
+		auto fishPositions = SceneGenerator::generateFishSchool(fishSchoolCenter, school_params);
+		SceneObject* fishSchool = new SceneObject(
+			life_guppy_model,
+			fishPositions,
+			glm::vec3(0.2f)
+		);
+
+		SceneObject* jellyfish = new SceneObject(
+			life_jellyfish_model,
+			{ glm::vec3(-10.0f, -3.0f, -15.0f), glm::vec3(-8.0f, 0.0f, -10.0f)},
+			glm::vec3(0.4f)
+		);
+
+		SceneObject* stingray = new SceneObject(
+			stingrayModel,
+			{ glm::vec3(0.0f, 0.0f, 2.0f) },
+			glm::vec3(0.2f)
+		);
+		underwaterDesert = new Level(shader,camera, SCRN_W, SCRN_H);
+		underwaterDesert->addObject(coralPinkObjects);
+		underwaterDesert->addObject(coralGonObjects);
+		underwaterDesert->addObject(coralPocilObjects);
+		underwaterDesert->addObject(coralStoneObjects);
+		underwaterDesert->addObject(fishSchool);
+		underwaterDesert->addObject(jellyfish);		
+		underwaterDesert->addObject(stingray);
+
 	}
 
 	catch (const std::exception& e) {
