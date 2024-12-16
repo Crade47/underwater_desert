@@ -34,7 +34,7 @@ constexpr auto SCRN_H = 1080;
 #pragma region GLOBAL_VARS
 Object* obj;
 Shader* shader;
-Camera* camera = new Camera(glm::vec3(-20.0f, 2.0f, 20.0f));
+Camera* camera = new Camera(glm::vec3(-15.0f, 10.0f, 15.0f));
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 int lastX = SCRN_W / 2, lastY = SCRN_H / 2;
@@ -44,12 +44,10 @@ int lastX = SCRN_W / 2, lastY = SCRN_H / 2;
 Level* underwaterDesert;
 
 
-float stingrayRotation = 0.0f;
-
 #pragma endregion GLOBAL_VARS
 
 #pragma region INPUT_G_VARIABLES
-float rotation = 0.0f;
+
 glm::vec3 translation(0.0f);
 float scale = 1.0f;
 
@@ -63,15 +61,14 @@ bool leftMousePressed = false;
 #pragma region INPUT_CONTROLS
 
 void keyboard(unsigned char key, int x, int y) {
-	const float moveSpeed = 1.9f;
+
 
 	if (key == 'w') camera->ProcessKeyboard(FORWARD, deltaTime);
 	if (key == 's') camera->ProcessKeyboard(BACKWARD, deltaTime);
 	if (key == 'a') camera->ProcessKeyboard(LEFT, deltaTime);
 	if (key == 'd') camera->ProcessKeyboard(RIGHT, deltaTime);
 
-	if (key == 'q') rotation += 5.0f;
-	if (key == 'e') rotation -= 5.0f;
+
 
 	if (key == '+') scale += 1.1f;
 	if (key == '-') scale -= 1.1f;
@@ -79,6 +76,7 @@ void keyboard(unsigned char key, int x, int y) {
 	if (key == 27) {
 		delete obj;
 		delete shader;
+		delete underwaterDesert;
 		exit(0);
 	}
 	glutPostRedisplay();
@@ -126,7 +124,7 @@ float getCurrentTime() {
 
 
 void display() {
-	std::cout << "In the display function" << std::endl;
+	
 	glClearColor(0.0f, 0.2f, 0.4f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -153,7 +151,7 @@ void display() {
 		shader->setUniform("view", view);
 		shader->setUniform("projection", projection);
 
-		std::cout << "generating level" << std::endl;
+
 		underwaterDesert->render();
 
 		if (obj != nullptr) {
@@ -239,7 +237,7 @@ void init() {
 
 		glm::vec3 fishSchoolCenter(6.0f, -1.0f, 10.0f);  // Adjust as needed
 		FishSchoolParams school_params;
-		school_params.numFish = 20;
+		school_params.numFish = 60;
 		school_params.spread = 10;
 		auto fishPositions = SceneGenerator::generateFishSchool(fishSchoolCenter, school_params);
 		SceneObject* fishSchool = new SceneObject(

@@ -25,20 +25,14 @@ void Level::render()
 {
 
     shader->use();
-    glm::mat4 view = camera->GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(75.0f), static_cast<float>(scrn_w) / scrn_h, 0.1f, 100.0f);
+    //glm::mat4 view = camera->GetViewMatrix();
+    //glm::mat4 projection = glm::perspective(glm::radians(75.0f), static_cast<float>(scrn_w) / scrn_h, 0.1f, 100.0f);
 
-    shader->setUniform("view", view);
-    shader->setUniform("projection", projection);
+    //shader->setUniform("view", view);
+    //shader->setUniform("projection", projection);
     shader->setUniform("viewPos", camera->Position);
 
 
-    shader->setUniform("direction", sunLight.direction);
-
-    shader->setUniform("ambient", sunLight.ambient);
-    shader->setUniform("diffuse", sunLight.diffuse);
-    shader->setUniform("specular", sunLight.specular);
-    shader->setUniform("lightColor", sunLight.color);
     shader->setUniform("material.shininess", 32.0f);
 
 
