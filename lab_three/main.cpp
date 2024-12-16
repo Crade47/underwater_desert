@@ -63,7 +63,7 @@ bool leftMousePressed = false;
 #pragma region INPUT_CONTROLS
 
 void keyboard(unsigned char key, int x, int y) {
-	const float moveSpeed = 0.1f;
+	const float moveSpeed = 1.9f;
 
 	if (key == 'w') camera->ProcessKeyboard(FORWARD, deltaTime);
 	if (key == 's') camera->ProcessKeyboard(BACKWARD, deltaTime);
@@ -126,16 +126,16 @@ float getCurrentTime() {
 
 
 void display() {
-
+	std::cout << "In the display function" << std::endl;
 	glClearColor(0.0f, 0.2f, 0.4f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	float currentFrame = getCurrentTime();
-	deltaTime = currentFrame - lastFrame;
-	lastFrame = currentFrame;
+	float currentTime = getCurrentTime();
+	deltaTime = currentTime - lastFrame;
+	lastFrame = currentTime;
+	shader->setUniform("time", currentTime);
 
-
-	if (obj != nullptr && shader != nullptr) {
+	if (shader != nullptr) {
 		shader->use();
 
 
@@ -153,19 +153,8 @@ void display() {
 		shader->setUniform("view", view);
 		shader->setUniform("projection", projection);
 
-		//shader->setUniform("color", glm::vec4(0.0f, greenValue, 0.3f, 1.0f));
-		glm::mat4 model = glm::mat4(1.0f);
-		/*model = glm::translate(model, cubePositions[i]);*/
-		float angle = 20.0f + rotation;
-		model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-		model = glm::translate(model, translation);
-		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 1.0f));
-
-		//model = glm::scale(model, glm::vec3(scale));
-
-
-
-
+		std::cout << "generating level" << std::endl;
+		underwaterDesert->render();
 
 		if (obj != nullptr) {
 			glm::mat4 terrainModel = glm::mat4(1.0f);
@@ -175,7 +164,7 @@ void display() {
 		}
 
 
-		underwaterDesert->render();
+	
 		glutSwapBuffers();
 	}
 }
@@ -271,6 +260,7 @@ void init() {
 			glm::vec3(0.2f)
 		);
 		underwaterDesert = new Level(shader,camera, SCRN_W, SCRN_H);
+		std::cout << "Adding objects" << std::endl;
 		underwaterDesert->addObject(coralPinkObjects);
 		underwaterDesert->addObject(coralGonObjects);
 		underwaterDesert->addObject(coralPocilObjects);
@@ -322,6 +312,7 @@ int main(int argc, char** argv) {
 	glutKeyboardFunc(keyboard);
 	glutMouseFunc(mouse);
 	glutMotionFunc(mouseMotion);
+	glutIdleFunc(display);
 		
 
 	// 6. Start the main loop
